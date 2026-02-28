@@ -1,0 +1,9 @@
+{
+  "name": "per-due-reservations-api",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "stripe": "^16.2.0",
+    "googleapis": "^140.0.0"
+  }
+}
