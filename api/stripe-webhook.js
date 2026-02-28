@@ -3,6 +3,15 @@ const { google } = require("googleapis");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
 function getGoogleClient() {
   const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, "\n");
   const auth = new google.auth.JWT(
@@ -28,9 +37,11 @@ module.exports = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
+  const rawBody = await readRawBody(req);
+
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,
+      rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );

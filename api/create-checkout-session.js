@@ -12,10 +12,27 @@ function isAllowedDate(dateStr) {
   return ALLOWED_DAYS.includes(day);
 }
 
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { name, email, phone, date, time, partySize, celebration } = req.body || {};
+  const rawBody = await readRawBody(req);
+  let body = {};
+  try {
+    body = JSON.parse(rawBody.toString("utf8"));
+  } catch {
+    return res.status(400).json({ error: "Invalid JSON" });
+  }
+
+  const { name, email, phone, date, time, partySize, celebration } = body || {};
 
   if (!name || !email || !phone || !date || !time || !partySize) {
     return res.status(400).json({ error: "Missing required fields" });
