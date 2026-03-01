@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
           currency: "usd",
           product_data: {
             name: "Reservation Deposit",
-            description: "Per Due — 2 guests"
+            description: "Per due (2 guests)"
           },
           unit_amount: 5000
         },
