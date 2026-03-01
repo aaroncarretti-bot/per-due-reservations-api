@@ -13,7 +13,11 @@ function readRawBody(req) {
 }
 
 function getGoogleClient() {
-  const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, "\n");
+  const rawKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY || "";
+  const normalized = rawKey.replace(/\\n/g, "\n").replace(/\r/g, "").trim();
+  const privateKey = normalized.includes("BEGIN PRIVATE KEY")
+    ? normalized
+    : Buffer.from(normalized, "base64").toString("utf8");
   const auth = new google.auth.JWT(
     process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
     null,
