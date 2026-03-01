@@ -22,7 +22,11 @@ function readRawBody(req) {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://per-due.la");
+  const origin = req.headers.origin;
+  const allowed = new Set(["https://per-due.la", "https://www.per-due.la"]);
+  if (origin && allowed.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
