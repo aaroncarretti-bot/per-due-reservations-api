@@ -51,8 +51,8 @@ module.exports = async (req, res) => {
   }
 
   const party = Number(partySize);
-  if (party < 1 || party > 2) {
-    return res.status(400).json({ error: "Party size must be 1 or 2" });
+  if (party !== 2) {
+    return res.status(400).json({ error: "Party size must be 2" });
   }
 
   if (!isAllowedDate(date)) {
@@ -73,11 +73,11 @@ module.exports = async (req, res) => {
           currency: "usd",
           product_data: {
             name: "Reservation Deposit",
-            description: `Per Due — ${party} guest(s)`
+            description: "Per Due — 2 guests"
           },
           unit_amount: 5000
         },
-        quantity: party
+        quantity: 1
       }
     ],
     metadata: { name, date, time, partySize: String(party), celebration: celebration || "" },
