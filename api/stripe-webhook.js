@@ -51,14 +51,13 @@ module.exports = async (req, res) => {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const { name, phone, date, time, partySize, celebration } = session.metadata || {};
+    const { name, date, time, partySize, celebration } = session.metadata || {};
     const amountTotal = session.amount_total ? session.amount_total / 100 : "";
 
     const row = [
       new Date().toISOString(),
       name || "",
       session.customer_email || "",
-      phone || "",
       date || "",
       time || "",
       partySize || "",

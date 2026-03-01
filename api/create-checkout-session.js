@@ -32,9 +32,9 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "Invalid JSON" });
   }
 
-  const { name, email, phone, date, time, partySize, celebration } = body || {};
+  const { name, email, date, time, partySize, celebration } = body || {};
 
-  if (!name || !email || !phone || !date || !time || !partySize) {
+  if (!name || !email || !date || !time || !partySize) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -68,7 +68,7 @@ module.exports = async (req, res) => {
         quantity: party
       }
     ],
-    metadata: { name, phone, date, time, partySize: String(party), celebration: celebration || "" },
+    metadata: { name, date, time, partySize: String(party), celebration: celebration || "" },
     success_url: `${process.env.BASE_URL}/reservation-confirmed?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.BASE_URL}/reservation-canceled`
   });
