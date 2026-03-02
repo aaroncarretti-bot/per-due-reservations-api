@@ -4,6 +4,7 @@
   "type": "commonjs",
   "dependencies": {
     "stripe": "^16.2.0",
-    "googleapis": "^140.0.0"
+    "googleapis": "^140.0.0",
+    "resend": "^4.0.0"
   }
 }
