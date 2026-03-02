@@ -1,9 +1,54 @@
 const Stripe = require("stripe");
+const { google } = require("googleapis");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const ALLOWED_TIMES = ["18:30", "20:30"]; // 6:30pm, 8:30pm
-const ALLOWED_DAYS = [5, 6, 0]; // Fri=5, Sat=6, Sun=0
+const ALLOWED_DAYS = [4, 5, 6]; // Thu=4, Fri=5, Sat=6
+const MAX_PER_SLOT = 5;
+
+function getGoogleClient() {
+  const rawKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY || "";
+  const normalized = rawKey.replace(/\\n/g, "\n").replace(/\r/g, "").trim();
+  const privateKey = normalized.includes("BEGIN PRIVATE KEY")
+    ? normalized
+    : Buffer.from(normalized, "base64").toString("utf8");
+  const auth = new google.auth.JWT(
+    process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+    null,
+    privateKey,
+    ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+  );
+  return google.sheets({ version: "v4", auth });
+}
+
+async function countReservations(date, time) {
+  const sheets = getGoogleClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+    range: `${process.env.GOOGLE_SHEETS_SHEET_NAME}!A:Z`
+  });
+
+  const rows = res.data.values || [];
+  if (rows.length === 0) return 0;
+
+  const startIndex =
+    rows[0] && rows[0].some((cell) => String(cell).toLowerCase().includes("date"))
+      ? 1
+      : 0;
+
+  let count = 0;
+  for (let i = startIndex; i < rows.length; i += 1) {
+    const row = rows[i];
+    const rowDate = row[3];
+    const rowTime = row[4];
+    if (rowDate === date && rowTime === time) {
+      count += 1;
+    }
+  }
+
+  return count;
+}
 
 function isAllowedDate(dateStr) {
   const date = new Date(`${dateStr}T00:00:00`);
@@ -56,11 +101,16 @@ module.exports = async (req, res) => {
   }
 
   if (!isAllowedDate(date)) {
-    return res.status(400).json({ error: "Date must be Fri, Sat, or Sun" });
+    return res.status(400).json({ error: "Date must be Thu, Fri, or Sat" });
   }
 
   if (!ALLOWED_TIMES.includes(time)) {
     return res.status(400).json({ error: "Time must be 18:30 or 20:30" });
+  }
+
+  const currentCount = await countReservations(date, time);
+  if (currentCount >= MAX_PER_SLOT) {
+    return res.status(409).json({ error: "That time slot is fully booked." });
   }
 
   const session = await stripe.checkout.sessions.create({
